@@ -1,10 +1,12 @@
-const express = require("express");
-const path = require("path");
-const fs = require("fs");
-const { exec } = require("child_process");
-const ReactDOMServer = require("react-dom/server");
-const React = require("react");
+import express from "express";
+import path from "path";
+import fs from "fs";
+import { exec } from "child_process";
 
+// const ReactDOMServer = require("react-dom/server");
+
+// const StaticRouter = require("react-router-dom/server");
+// console.log("StaticRouter", StaticRouter);
 const app = express();
 const port = 4000;
 
@@ -28,10 +30,60 @@ const installPlugin = async (moduleName) => {
         }
       }
       console.log(`모듈 설치 완료!`);
+
+      await insertPluginInClient();
+      console.log(`클라이언트 빌드 시작!`);
       clientBuild();
       return;
     }
   );
+};
+
+const insertPluginInClient = async () => {
+  try {
+    const plugins = await require(pluginPath);
+
+    // 스크린 리스트 파일 경로
+    const clientScreenPath = path.join(
+      __dirname,
+      "../../client/src/screen/index.ts"
+    );
+
+    // 스크린 동적 텍스트 추가
+    let screens = await fs.promises.readFile(clientScreenPath, "utf-8");
+    let importList = ``;
+    let exportList = ``;
+    for (const key in plugins) {
+      const plugin = plugins[key];
+      importList = `import ${key}Comp from "${plugin.moduleName}";\n${importList}`;
+      exportList = `${key}: ${key}Comp(),\n${exportList}`;
+    }
+    screens = `${importList}\n${screens.replace(
+      `export default {`,
+      `export default {\n${exportList}`
+    )}`;
+
+    // 파일 업데이트
+    await fs.promises.writeFile(clientScreenPath, screens);
+
+    // const clientRouterPath = path.join(
+    //   __dirname,
+    //   "../../client/src/router.tsx"
+    // );
+    // let routeFile = await fs.promises.readFile(clientRouterPath, "utf-8");
+    // let tempPluginHtml = ``;
+    // for (const key in plugins) {
+    //   const plugin = plugins[key];
+    //   tempPluginHtml = `import ${key}Comp from "${plugin.moduleName}";`;
+    // }
+
+    // routeFile = `${tempPluginHtml}\n${routeFile}`;
+    // // 파일 업데이트
+    // await fs.promises.writeFile(clientRouterPath, routeFile);
+    console.log(`파일 수정 완료!`);
+  } catch (error) {
+    console.error("클라이언트 파일 리드 에러:", error);
+  }
 };
 
 const clientBuild = async () => {
@@ -53,19 +105,20 @@ const clientBuild = async () => {
 };
 
 const pluginInit = async () => {
-  const plugins = require("../config/plugins");
+  console.log("============== Plugin init ==============");
+  const plugins = await require(pluginPath);
   const clientPkg = require("../../client/package.json");
-  const clientPkgList = Object.keys(clientPkg);
-
+  const clientPkgList = Object.keys(clientPkg["dependencies"]);
   const needInstallArr = [];
   for (const key in plugins) {
-    console.log(plugins[key]);
     if (!clientPkgList.includes(plugins[key]["moduleName"])) {
       needInstallArr.push(plugins[key]["moduleName"]);
     }
   }
-
-  await installPlugin(needInstallArr.join(" "));
+  console.log("needInstallArr", needInstallArr);
+  if (needInstallArr.length > 0) {
+    await installPlugin(needInstallArr.join(" "));
+  }
 };
 
 const init = () => {
@@ -75,6 +128,7 @@ const init = () => {
 // init();
 
 fs.watchFile(pluginPath, async (curr, prev) => {
+  console.log("===========Changed plugin==========");
   pluginInit();
 });
 
@@ -82,8 +136,8 @@ app.use(express.static(path.join(__dirname, "../../client/build")));
 
 app.get("/plugin/upload", (req, res) => {
   try {
-    const data = require("../config/plugins");
-    console.log(data.console);
+    const data = require(pluginPath);
+
     data["console"] = {
       enabled: true,
       displayLabel: "Console",
@@ -92,7 +146,6 @@ app.get("/plugin/upload", (req, res) => {
     };
 
     const file = JSON.stringify(data);
-    console.log(file);
     fs.writeFile(pluginPath, file, "utf-8", (err) => {
       if (err) {
         console.error("파일 등록중 에러", err);
@@ -108,8 +161,8 @@ app.get("/plugin/upload", (req, res) => {
 
 app.get("/api/getMenu", (req, res) => {
   try {
-    const data = require("../config/plugins");
-    const menu = [{ name: "Plugins", url: "/plugins" }];
+    const data = require(pluginPath);
+    const menu = [{ name: "Plugins", url: "/plugins", menuId: "plugins" }];
 
     for (const key in data) {
       if (data[key]["enabled"]) {
@@ -129,8 +182,8 @@ app.get("/api/getMenu", (req, res) => {
 
 const getMenu = async () => {
   try {
-    const data = require("../config/plugins");
-    const menu = [{ name: "Plugins", url: "/plugins" }];
+    const data = require(pluginPath);
+    const menu = [{ name: "Plugins", url: "/plugins", menuId: "plugins" }];
 
     for (const key in data) {
       if (data[key]["enabled"]) {
@@ -148,6 +201,28 @@ const getMenu = async () => {
   }
 };
 
+// app.get("/console", (req, res) => {
+//   const App = require("hh-kr-test3");
+//   console.log(JSON.stringify(temp));
+//   const renderString = ReactDOMServer.renderToString(
+//     <StaticRouter location={req.url}>
+//       <App />
+//     </StaticRouter>
+//   );
+
+//   res.send(`
+//   <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8">
+//   <title>test-ssr</title>
+// </head>
+// <body>
+//   <div id="content">${renderString}</div>
+// </body>
+// </html>`);
+// });
+
 app.get("*", (req, res) => {
   fs.readFile(
     path.join(__dirname, "../../client/build/index.html"),
@@ -159,7 +234,6 @@ app.get("*", (req, res) => {
         '<div id="menus"></div>',
         `<div id="menus"><h1>${menus[0].name}<h1></div>`
       );
-      console.log(html);
       res.send(html);
     }
   );

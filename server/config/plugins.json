@@ -1,14 +1,1 @@
-{
-  "dayjs": {
-    "enabled": true,
-    "displayLabel": "Console",
-    "moduleName": "dayjs",
-    "url": "/console2"
-  },
-  "console": {
-    "enabled": true,
-    "displayLabel": "Console",
-    "moduleName": "hh-kr-test3",
-    "url": "/console"
-  }
-}
+{"console":{"enabled":true,"displayLabel":"Console","moduleName":"hh-kr-test3","url":"/console"}}

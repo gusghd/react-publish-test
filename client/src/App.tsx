@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import "./App.css";
 import { BrowserRouter, Link } from "react-router-dom";
-import AppRouter from "./routes/router";
+import AppRouter from "./router";
 
 function App() {
-  const [menus, setMenus] = useState<{ name: string; url: string }[]>([]);
+  const [menus, setMenus] = useState<
+    { name: string; url: string; menuId: string }[]
+  >([]);
 
   const getMenu = async () => {
     const res = await fetch("/api/getMenu");
@@ -28,7 +29,7 @@ function App() {
           <Link to="/test2">테스트4</Link>
           <Link to="/plugins">플러그인 설치</Link> */}
         </header>
-        <AppRouter></AppRouter>
+        <AppRouter menus={menus}></AppRouter>
       </div>
     </BrowserRouter>
   );

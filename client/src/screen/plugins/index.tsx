@@ -3,7 +3,7 @@ export default function Plugins() {
     <div>
       <button
         onClick={async () => {
-          const data = await fetch("/upload");
+          const data = await fetch("/plugin/upload");
           console.log(data);
         }}
       >
