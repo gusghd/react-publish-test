@@ -1,15 +1,10 @@
 {
   "name": "hh-kr-test3",
-  "version": "0.1.30",
+  "version": "0.1.53",
   "private": false,
   "main": "dist/app.js",
   "dependencies": {
-    "node-sass": "^9.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.18.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.0"
+    "node-sass": "^9.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",
@@ -25,22 +20,18 @@
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react-dom": "^17.0.0 || ^18.0.0",
+    "react-router-dom": "^6.18.0",
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prepare1": "rm -rf dist && mkdir dist && tsc",
+    "prepare": "rm -rf dist && mkdir dist && tsc",
     "publish:npm": "rm -rf dist && mkdir dist && babel src/lib -d dist --copy-files",
     "webpack": "rm -rf dist && webpack --config webpack.config.js --mode production"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

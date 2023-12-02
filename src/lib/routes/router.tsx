@@ -4,18 +4,18 @@ import * as page from "../screen";
 
 const route_list = [
   {
-    path: "/console/test1",
-    element: page.test1(),
+    path: "/test1",
+    element: page.test1,
   },
   {
-    path: "/console/test2",
-    element: page.test2(),
+    path: "/test2",
+    element: page.test2,
   },
 ];
 
 export function ScrollToTop() {
   const { pathname } = useLocation();
-
+  console.log("pathname", pathname);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
